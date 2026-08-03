@@ -17,6 +17,28 @@ npm run dev      # http://localhost:5173
 npm run build    # typecheck + production bundle into dist/
 ```
 
+## Installing it as an app
+
+Lumen is a progressive web app: served over HTTPS it installs to a phone's home
+screen with its own icon, opens fullscreen with no browser chrome, and keeps
+working with no signal. `Workshop → Install Lumen` triggers the prompt when the
+browser is offering one.
+
+Offline support comes from a service worker generated at build time by a plugin
+in `vite.config.ts`, which fills in the placeholders in `sw.template.js`. The
+precache list *has* to be generated, because Vite fingerprints asset filenames —
+a hand-written list would cache nothing on the very first visit, which is the one
+visit that matters. Navigation is network-first, so a new deploy lands on the
+next launch; assets are cache-first, since content-addressed names make a cached
+hit always correct.
+
+`npm run dev` never registers the worker, so local development is never served
+from a stale cache.
+
+Any static host works. `base` comes from `PAGES_BASE` for hosts that serve from
+a subdirectory, and defaults to `/`. `public/_redirects` is Cloudflare Pages'
+SPA fallback and is ignored elsewhere.
+
 ---
 
 ## The one idea

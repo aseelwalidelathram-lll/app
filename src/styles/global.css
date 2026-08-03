@@ -726,7 +726,13 @@ input, select, textarea {
 
 @media (max-width: 900px) {
   .rail { display: none; }
-  .main { padding: 20px 16px 130px; }
+  /* Installed to a home screen the app runs fullscreen, so the notch and the
+     gesture bar are ours to avoid — nothing else is going to inset for us. */
+  .main {
+    padding:
+      calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right))
+      calc(130px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+  }
   .g-hero, .g3, .g4 { grid-template-columns: minmax(0, 1fr); }
   .g2 { grid-template-columns: minmax(0, 1fr); }
   .hero { flex-direction: column-reverse; align-items: flex-start; gap: 18px; }
@@ -757,7 +763,12 @@ input, select, textarea {
   .tabbar button .glyph { font-size: 18px; }
   .tabbar button.active { color: var(--accent); }
 
-  .fab { bottom: 82px; right: 16px; height: 50px; padding: 0 18px; }
+  .fab {
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    right: calc(16px + env(safe-area-inset-right));
+    height: 50px;
+    padding: 0 18px;
+  }
   .toasts { bottom: 148px; right: 16px; left: 16px; max-width: none; }
 }
 

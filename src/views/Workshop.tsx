@@ -1,7 +1,43 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SHIELD_COST, SIGILS, THEMES, downloadSave, importSave } from '../engine';
 import { Card, Chip } from '../components/ui';
 import { useStore } from '../state/context';
+import { isInstalled, onInstallability, promptInstall } from '../pwa';
+
+/* --------------------------------------------------------------- install */
+
+function InstallCard() {
+  const [canInstall, setCanInstall] = useState(false);
+  const [installed, setInstalled] = useState(isInstalled);
+
+  useEffect(() => onInstallability(setCanInstall), []);
+
+  if (installed) return null;
+
+  return (
+    <Card title="Put Lumen on your home screen">
+      <div className="hint" style={{ marginBottom: 13 }}>
+        Installed, it opens like any other app — its own icon, full screen, no browser bar — and it still works
+        with no signal. Your save stays on this device either way.
+      </div>
+      {canInstall ? (
+        <button
+          className="btn primary"
+          onClick={async () => {
+            if (await promptInstall()) setInstalled(true);
+          }}
+        >
+          ✦ Install Lumen
+        </button>
+      ) : (
+        <div className="tiny faint">
+          Your browser handles this from its own menu: on Android Chrome, tap ⋮ → <em>Add to Home screen</em>. On
+          iPhone, tap Share → <em>Add to Home Screen</em>.
+        </div>
+      )}
+    </Card>
+  );
+}
 
 export function Workshop() {
   const { world, save, buy, buyGrace, wear, settings, resetEverything, loadFrom } = useStore();
@@ -20,6 +56,8 @@ export function Workshop() {
           only ways to make this place feel more like yours, plus grace days for the streak.
         </p>
       </div>
+
+      <InstallCard />
 
       <Card>
         <div className="row" style={{ gap: 14, flexWrap: 'wrap' }}>

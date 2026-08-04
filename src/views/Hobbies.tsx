@@ -37,7 +37,7 @@ function HobbyList({ onOpen }: { onOpen: (id: string) => void }) {
   return (
     <div className="stack" style={{ gap: 20 }}>
       <div className="page-head">
-        <h1>Hobbies</h1>
+        <h1>Pursuits</h1>
         <p className="sub">
           The parts of your life that are yours rather than required. Each one keeps its own shelf, its own
           journal and its own hours.
@@ -55,7 +55,7 @@ function HobbyList({ onOpen }: { onOpen: (id: string) => void }) {
           </div>
           <div className="row-wrap">
             <button className="btn" onClick={() => setMaking(true)}>
-              ＋ Another hobby
+              ＋ Another pursuit
             </button>
           </div>
         </>
@@ -203,7 +203,7 @@ function HobbySpace({
     <div className="stack" style={{ gap: 20 }}>
       <div className="row" style={{ gap: 10 }}>
         <button className="btn sm ghost" onClick={onBack}>
-          ← Hobbies
+          ← Pursuits
         </button>
         <span className="spacer" />
         <button className="btn sm ghost" onClick={() => setEditing(true)}>
@@ -587,7 +587,7 @@ function HobbyEditor({
 
   return (
     <Sheet
-      title={hobby ? 'Edit hobby' : 'A new hobby'}
+      title={hobby ? 'Edit pursuit' : 'A new pursuit'}
       subtitle="All of this is yours to change later."
       emoji={draft.emoji ?? '✦'}
       onClose={onClose}
@@ -711,7 +711,7 @@ function HobbyEditor({
             })}
           </div>
           <div className="tiny faint" style={{ marginTop: 6 }}>
-            Logging any of these anywhere in the app counts toward this hobby — you never have to log it twice.
+            Logging any of these anywhere in the app counts toward this pursuit — you never have to log it twice.
           </div>
         </div>
 
@@ -725,7 +725,7 @@ function HobbyEditor({
             {confirmDrop ? (
               <>
                 <span className="tiny faint">
-                  Removes the hobby and its journal. Your logged hours stay — they were still lived.
+                  Removes the pursuit and its journal. Your logged hours stay — they were still lived.
                 </span>
                 <button
                   className="btn sm danger"
@@ -743,7 +743,7 @@ function HobbyEditor({
               </>
             ) : (
               <button className="btn sm danger" onClick={() => setConfirmDrop(true)}>
-                Remove this hobby
+                Remove this pursuit
               </button>
             )}
           </div>

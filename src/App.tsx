@@ -18,7 +18,7 @@ type ViewId = 'today' | 'quests' | 'hobbies' | 'character' | 'almanac' | 'atlas'
 const NAV: { id: ViewId; label: string; glyph: string }[] = [
   { id: 'today', label: 'Today', glyph: '🌅' },
   { id: 'quests', label: 'Quests', glyph: '📜' },
-  { id: 'hobbies', label: 'Hobbies', glyph: '🧶' },
+  { id: 'hobbies', label: 'Pursuits', glyph: '🧶' },
   { id: 'character', label: 'Character', glyph: '🧭' },
   { id: 'almanac', label: 'Almanac', glyph: '🏅' },
   { id: 'atlas', label: 'Atlas', glyph: '🗺️' },

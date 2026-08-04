@@ -101,12 +101,17 @@ challenges. It is idempotent and safe to call as often as you like.
 |---|---|
 | **Today** | The whole world state on one page — character, vitals, today's quests, what would move the most right now, ritual checklist, the day's record |
 | **Quests** | Daily, weekly and monthly boards, eight long missions, opt-in challenges |
+| **Pursuits** | Your own hobbies, each with a shelf, a journal, its own hours, and one thing off the shelf offered each week |
 | **Character** | Nine attributes with what each one governs, titles, ranks, rituals, mastery ladders |
 | **Almanac** | Achievements, collections, and the Chronicle of every reward ever paid |
 | **Atlas** | The progress map, a heatmap of every day, and the honest statistics |
 | **Workshop** | Sparks, grace days, themes, sigils, settings, export/import |
 
-Press `L` to log from anywhere; `1`–`6` switch screens.
+Press `L` to log from anywhere; `1`–`7` switch screens.
+
+> The code calls them hobbies; the app calls them Pursuits. The save file field
+> is `hobbies`, so renaming it would cost a migration for no one's benefit —
+> but the words a person reads are the ones they chose.
 
 ## The design rules
 

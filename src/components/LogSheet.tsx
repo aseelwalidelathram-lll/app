@@ -149,7 +149,7 @@ function LogDetail({ action, onBack, onClose }: { action: ActionDef; onBack: () 
             className="btn primary"
             style={{ flex: 1 }}
             onClick={() => {
-              log(action.id, amount, note);
+              log(action.id, amount, { note });
               onClose();
             }}
           >

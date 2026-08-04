@@ -17,6 +17,7 @@ import { ALL_CARDS, COLLECTION_OF_CARD } from './content/collections';
 import { CHALLENGES_BY_ID, MISSIONS } from './content/missions';
 import { TITLES } from './content/titles';
 import { deriveWorld, type World } from './derive';
+import { PICK_REWARD, pickKey } from './hobbies';
 import { harmonyMultiplier, isMajorLevel, masteryFor, vitalMultiplier } from './progression';
 import { evaluateRequirement, generateBoard, periodKeyFor, type GenContext } from './quests';
 import type {
@@ -31,7 +32,7 @@ import type {
 } from './types';
 import { addDays, clamp, daysBetween, rangeKeys, round, softCapped, todayKey, uid } from './util';
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 /* --------------------------------------------------------------- new game */
 
@@ -46,6 +47,10 @@ export function createSave(name = 'Traveller'): SaveState {
     questBoard: { daily: null, weekly: null, monthly: null },
     claimedQuests: {},
     unlocked: { achievements: {}, cards: {}, titles: {}, cosmetics: ['theme_default', 'sigil_seed'] },
+    hobbies: [],
+    journal: [],
+    pickOverrides: {},
+    claimedPicks: {},
     missionStages: {},
     challenges: [],
     ledger: [],
@@ -148,6 +153,7 @@ export function reconcile(input: SaveState, now: Date = new Date()): { save: Sav
     const cards = { ...save.unlocked.cards };
     const titles = { ...save.unlocked.titles };
     const missionStages = { ...save.missionStages };
+    const claimedPicks = { ...save.claimedPicks };
     let challenges = save.challenges;
     let fired = false;
 
@@ -221,6 +227,31 @@ export function reconcile(input: SaveState, now: Date = new Date()): { save: Sav
         color: '#ffd479',
       });
       fired = true;
+    }
+
+    // Finished shelf things ---------------------------------------------
+    // The pick is an invitation, not a condition: finishing *anything* on a
+    // shelf pays, whether or not it was the one offered this week. Paying
+    // only for the picked item would turn a suggestion into a rule.
+    for (const hobby of world.hobbies) {
+      for (const item of hobby.finished) {
+        const key = pickKey(hobby.def.id, item.id);
+        if (claimedPicks[key]) continue;
+        claimedPicks[key] = today;
+        newLedger.push(
+          ledgerEntry('pick', key, item.title, hobby.def.emoji, PICK_REWARD, today, at),
+        );
+        events.push({
+          id: uid('ev'),
+          kind: 'quest_complete',
+          title: `Finished: ${item.title}`,
+          detail: `${hobby.def.name} · ${rewardDetail(PICK_REWARD)}`,
+          emoji: hobby.def.emoji,
+          weight: 3,
+          color: hobby.def.color,
+        });
+        fired = true;
+      }
     }
 
     // Missions ----------------------------------------------------------
@@ -299,6 +330,7 @@ export function reconcile(input: SaveState, now: Date = new Date()): { save: Sav
       claimedQuests: claimed,
       unlocked: { ...save.unlocked, achievements, cards, titles },
       missionStages,
+      claimedPicks,
       challenges,
     };
     world = deriveWorld(save, now);
@@ -326,7 +358,7 @@ export function logAction(
   save: SaveState,
   actionId: string,
   amount: number,
-  opts: { note?: string; now?: Date; date?: string } = {},
+  opts: { note?: string; now?: Date; date?: string; hobbyId?: string; itemId?: string } = {},
 ): LogResult {
   const now = opts.now ?? new Date();
   const def = ACTIONS[actionId];
@@ -363,6 +395,8 @@ export function logAction(
     at: now.getTime(),
     amount,
     note: opts.note?.trim() || undefined,
+    hobbyId: opts.hobbyId,
+    itemId: opts.itemId,
     xp: Math.max(1, Math.round(def.xpPerUnit * effective * multiplier)),
     attributeXp,
     bonuses: { vital: round(vitalBonus, 3), mastery: round(masteryBonus, 3), harmony: round(harmonyBonus, 3) },

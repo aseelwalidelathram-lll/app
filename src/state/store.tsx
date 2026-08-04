@@ -2,7 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   abandonChallenge,
+  addHobby,
+  addJournalEntry,
+  addShelfItem,
   buyShield,
+  createShelfItem,
   clearSave,
   createSave,
   deriveWorld,
@@ -13,12 +17,20 @@ import {
   markSeen,
   purchase,
   reconcile,
+  removeHobby,
+  removeJournalEntry,
+  removeShelfItem,
+  reopenShelfItem,
+  finishShelfItem,
   setName,
   setRituals,
   setTitle,
+  setWeekPick,
   startChallenge,
   undoEntry,
+  updateHobby,
   updateSettings,
+  updateShelfItem,
   writeSave,
   COSMETICS_BY_ID,
   SHIELD_COST,
@@ -78,14 +90,39 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       dismissEvent: (id) => setEvents((prev) => prev.filter((e) => e.id !== id)),
       clearEvents: () => setEvents([]),
 
-      log: (actionId, amount, note) => {
+      log: (actionId, amount, opts) => {
         setSave((current) => {
-          const result = logAction(current, actionId, amount, { note });
+          const result = logAction(current, actionId, amount, opts ?? {});
           push(result.events);
           setLastEntry(result.entry);
           return result.save;
         });
       },
+
+      /* --- hobbies ---------------------------------------------------- */
+      addHobby: (hobby) => mutate((s) => addHobby(s, hobby)),
+      editHobby: (id, patch) => mutate((s) => updateHobby(s, id, patch)),
+      dropHobby: (id) => mutate((s) => removeHobby(s, id)),
+
+      addToShelf: (hobbyId, item) =>
+        mutate((s) => addShelfItem(s, hobbyId, createShelfItem({ addedOn: todayFor(s), ...item }))),
+      editShelfItem: (hobbyId, itemId, patch) => mutate((s) => updateShelfItem(s, hobbyId, itemId, patch)),
+      dropShelfItem: (hobbyId, itemId) => mutate((s) => removeShelfItem(s, hobbyId, itemId)),
+
+      // Finishing pays, so it has to run through reconcile to reach the ledger.
+      finishItem: (hobbyId, itemId) =>
+        setSave((s) => {
+          const settled = reconcile(finishShelfItem(s, hobbyId, itemId, todayFor(s)));
+          push(settled.events);
+          return settled.save;
+        }),
+      reopenItem: (hobbyId, itemId) => mutate((s) => reopenShelfItem(s, hobbyId, itemId)),
+
+      choosePick: (hobbyId, itemId) => mutate((s) => setWeekPick(s, hobbyId, todayFor(s), itemId)),
+
+      journal: (hobbyId, text, itemId) =>
+        mutate((s) => addJournalEntry(s, { hobbyId, itemId, text, date: todayFor(s) })),
+      dropJournal: (id) => mutate((s) => removeJournalEntry(s, id)),
 
       undo: (entryId) => mutate((s) => undoEntry(s, entryId)),
       rituals: (ids) => mutate((s) => reconcile(setRituals(s, ids)).save),

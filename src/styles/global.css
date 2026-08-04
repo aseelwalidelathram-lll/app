@@ -798,3 +798,153 @@ body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::aft
   animation-duration: 0.001ms !important;
   transition-duration: 0.001ms !important;
 }
+
+/* ------------------------------------------------------------- hobbies */
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  outline-offset: 2px;
+}
+
+/* The card that opens into a hobby. */
+.hobby-card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: 0;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.22s var(--ease), border-color 0.22s var(--ease);
+}
+.hobby-card:hover { transform: translateY(-3px); }
+.reduced-motion .hobby-card { transition: none; }
+.reduced-motion .hobby-card:hover { transform: none; }
+
+.hobby-cover {
+  height: 104px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line-soft);
+}
+.hobby-body { padding: 13px 15px 15px; }
+.hobby-pick-mini {
+  margin-top: 10px;
+  padding: 9px 11px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.hobby-banner {
+  height: 158px;
+  margin: -18px -18px 16px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+
+/* Images fill whatever box they are given without distorting. */
+.pic-fill {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pic-drop {
+  border: 1px dashed var(--line);
+  border-radius: var(--r-sm);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--surface);
+}
+.pic-drop.wide { aspect-ratio: 16 / 7; }
+.pic-drop.square { aspect-ratio: 1; max-width: 190px; }
+.pic-drop:hover { border-color: color-mix(in oklab, var(--accent) 45%, transparent); }
+
+/* This week's pick. */
+.pick { display: flex; gap: 15px; flex-wrap: wrap; }
+.pick-cover {
+  width: 108px;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  flex: none;
+}
+
+.shelf-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 11px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+}
+.shelf-thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 9px;
+  object-fit: cover;
+  flex: none;
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+  border: 1px solid var(--line-soft);
+}
+
+.journal-input {
+  width: 100%;
+  resize: vertical;
+  padding: 11px 13px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.journal-input:focus {
+  outline: none;
+  border-color: color-mix(in oklab, var(--accent) 50%, transparent);
+}
+
+.journal-entry {
+  padding: 11px 13px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+}
+
+/* Hobbies stay at least two-up even on a phone — a stack of seven full-width
+   cards is a scroll, not a list you can see. */
+.hobby-grid { grid-template-columns: repeat(auto-fill, minmax(212px, 1fr)); }
+
+@media (max-width: 900px) {
+  .hobby-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .hobby-cover { height: 76px; }
+  .hobby-body { padding: 11px 12px 13px; }
+  .hobby-banner { height: 120px; margin: -18px -18px 14px; }
+  .pick-cover { width: 86px; }
+}

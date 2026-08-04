@@ -7,16 +7,18 @@ import { Almanac } from './views/Almanac';
 import { Atlas } from './views/Atlas';
 import { Character } from './views/Character';
 import { EveningReview, MorningBrief } from './views/DailyLoop';
+import { Hobbies } from './views/Hobbies';
 import { Onboarding } from './views/Onboarding';
 import { Quests } from './views/Quests';
 import { Today } from './views/Today';
 import { Workshop } from './views/Workshop';
 
-type ViewId = 'today' | 'quests' | 'character' | 'almanac' | 'atlas' | 'workshop';
+type ViewId = 'today' | 'quests' | 'hobbies' | 'character' | 'almanac' | 'atlas' | 'workshop';
 
 const NAV: { id: ViewId; label: string; glyph: string }[] = [
   { id: 'today', label: 'Today', glyph: '🌅' },
   { id: 'quests', label: 'Quests', glyph: '📜' },
+  { id: 'hobbies', label: 'Hobbies', glyph: '🧶' },
   { id: 'character', label: 'Character', glyph: '🧭' },
   { id: 'almanac', label: 'Almanac', glyph: '🏅' },
   { id: 'atlas', label: 'Atlas', glyph: '🗺️' },
@@ -122,6 +124,7 @@ export default function App() {
       <main className="main">
         {view === 'today' && <Today onLog={openLog} />}
         {view === 'quests' && <Quests onLog={openLog} />}
+        {view === 'hobbies' && <Hobbies onLog={openLog} />}
         {view === 'character' && <Character />}
         {view === 'almanac' && <Almanac />}
         {view === 'atlas' && <Atlas />}

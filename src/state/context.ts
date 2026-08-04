@@ -1,6 +1,13 @@
 import { createContext, useContext } from 'react';
-import type { GameEvent, LogEntry, SaveState, Settings } from '../engine';
+import type { GameEvent, Hobby, LogEntry, SaveState, Settings, ShelfItem } from '../engine';
 import type { World } from '../engine/derive';
+
+export interface LogOpts {
+  note?: string;
+  /** Attribute this to a hobby, and optionally to one thing on its shelf. */
+  hobbyId?: string;
+  itemId?: string;
+}
 
 export interface StoreValue {
   save: SaveState;
@@ -9,7 +16,21 @@ export interface StoreValue {
   lastEntry: LogEntry | null;
   dismissEvent: (id: string) => void;
   clearEvents: () => void;
-  log: (actionId: string, amount: number, note?: string) => void;
+  log: (actionId: string, amount: number, opts?: LogOpts) => void;
+
+  /* hobbies */
+  addHobby: (hobby: Hobby) => void;
+  editHobby: (id: string, patch: Partial<Hobby>) => void;
+  dropHobby: (id: string) => void;
+  addToShelf: (hobbyId: string, item: Partial<ShelfItem> & { title: string }) => void;
+  editShelfItem: (hobbyId: string, itemId: string, patch: Partial<ShelfItem>) => void;
+  dropShelfItem: (hobbyId: string, itemId: string) => void;
+  finishItem: (hobbyId: string, itemId: string) => void;
+  reopenItem: (hobbyId: string, itemId: string) => void;
+  choosePick: (hobbyId: string, itemId: string | null) => void;
+  journal: (hobbyId: string, text: string, itemId?: string) => void;
+  dropJournal: (id: string) => void;
+
   undo: (entryId: string) => void;
   rituals: (ids: string[]) => void;
   beginChallenge: (id: string) => void;

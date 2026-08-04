@@ -11,19 +11,34 @@
 import { ACTIONS, ACTION_LIST, DEFAULT_RITUALS } from './content/actions';
 import { ATTRIBUTES, ATTRIBUTE_IDS, CATEGORIES } from './content/attributes';
 import { attributeLevel, characterLevel, masteryFor, nextRank, rankFor, type LevelInfo, type MasteryInfo, type Rank } from './progression';
+import { itemComplete, pickForWeek, shelfProgress, type Pick } from './hobbies';
 import { evaluateRequirement, periodKeyFor, windowFor, type EvalContext } from './quests';
 import type {
   ActionDef,
   AttributeDef,
   AttributeId,
   CategoryId,
+  Hobby,
+  JournalEntry,
   LogEntry,
   QuestScope,
   QuestState,
   SaveState,
+  ShelfItem,
   VitalId,
 } from './types';
-import { addDays, clamp, daysBetween, lastNDays, rangeKeys, sum, timeBucket, todayKey, unique } from './util';
+import {
+  addDays,
+  clamp,
+  daysBetween,
+  lastNDays,
+  rangeKeys,
+  sum,
+  timeBucket,
+  todayKey,
+  unique,
+  weekStart,
+} from './util';
 
 /* ---------------------------------------------------------------- shapes */
 
@@ -120,14 +135,97 @@ export interface World {
   quests: Record<QuestScope, QuestState[]>;
   allQuests: QuestState[];
 
+  hobbies: HobbyState[];
+  hobbyById: Record<string, HobbyState>;
+
   metric: (id: string) => number;
   activeDays: number;
   perfectDays: number;
 }
 
+/** One hobby, with its shelf, its journal and its own hours accounted for. */
+export interface HobbyState {
+  def: Hobby;
+  entries: LogEntry[];
+  /** Minutes, for the actions that are measured in them. */
+  minutes: number;
+  entryCount: number;
+  /** Distinct days this hobby was touched. */
+  days: number;
+  weekMinutes: number;
+  lastActive: string | null;
+  /** Consecutive days up to today (or yesterday, still standing). */
+  streak: number;
+  progress: Record<string, number>;
+  /** Still going. Ordered with anything already started first. */
+  active: ShelfItem[];
+  finished: ShelfItem[];
+  pick: Pick | null;
+  journal: JournalEntry[];
+}
+
 /* ------------------------------------------------------------ helpers */
 
 const NEUTRAL: Vitals = { energy: 45, clarity: 42, spirit: 48 };
+
+/**
+ * A hobby's own slice of the record.
+ *
+ * Time counts toward a hobby two ways: an entry explicitly tagged with it, or
+ * an entry using one of its actions. The second is what lets logging "Read,
+ * 30 min" from the ordinary log sheet still show up here, without asking
+ * anyone to remember to attribute it.
+ */
+function deriveHobby(save: SaveState, def: Hobby, today: string): HobbyState {
+  const actionIds = new Set(def.actionIds);
+  const entries = save.log.filter((e) => e.hobbyId === def.id || (!e.hobbyId && actionIds.has(e.actionId)));
+
+  const dayKeys = new Set(entries.map((e) => e.date));
+  const weekFrom = weekStart(today);
+  let minutes = 0;
+  let weekMinutes = 0;
+  for (const e of entries) {
+    if (ACTIONS[e.actionId]?.unit !== 'minutes') continue;
+    minutes += e.amount;
+    if (e.date >= weekFrom) weekMinutes += e.amount;
+  }
+
+  const sortedDays = [...dayKeys].sort();
+  const lastActive = sortedDays.length ? sortedDays[sortedDays.length - 1] : null;
+
+  // A streak that only breaks once yesterday is also empty — a hobby you did
+  // last night is not lapsed just because you have not got to it yet today.
+  let streak = 0;
+  if (lastActive && daysBetween(lastActive, today) <= 1) {
+    let cursor = lastActive;
+    while (dayKeys.has(cursor)) {
+      streak++;
+      cursor = addDays(cursor, -1);
+    }
+  }
+
+  const progress = shelfProgress(save.log, def);
+  const finished = def.shelf.filter((i) => itemComplete(i, progress[i.id] ?? 0));
+  const active = def.shelf
+    .filter((i) => !itemComplete(i, progress[i.id] ?? 0))
+    .sort((a, b) => (progress[b.id] ?? 0) - (progress[a.id] ?? 0) || b.addedAt - a.addedAt);
+
+  return {
+    def,
+    entries,
+    minutes,
+    entryCount: entries.length,
+    days: dayKeys.size,
+    weekMinutes,
+    lastActive,
+    streak,
+    progress,
+    active,
+    finished,
+    pick: pickForWeek(def, weekFrom, save.seed, progress, save.pickOverrides),
+    journal: save.journal.filter((j) => j.hobbyId === def.id).sort((a, b) => b.at - a.at),
+  };
+}
 
 /** Sleep quality peaks at eight hours and falls off in both directions. */
 export function sleepQuality(hours: number): number {
@@ -472,6 +570,10 @@ export function deriveWorld(save: SaveState, now: Date = new Date()): World {
   const monthsActive = new Set(logged.map((d) => d.slice(0, 7))).size;
   const questsDone = Object.keys(save.claimedQuests).length;
 
+  /* --- hobbies -------------------------------------------------------- */
+  const hobbies = save.hobbies.map((h) => deriveHobby(save, h, today));
+  const hobbyById: Record<string, HobbyState> = Object.fromEntries(hobbies.map((h) => [h.def.id, h]));
+
   const world: World = {
     save,
     today,
@@ -496,6 +598,8 @@ export function deriveWorld(save: SaveState, now: Date = new Date()): World {
     sparks,
     quests,
     allQuests,
+    hobbies,
+    hobbyById,
     activeDays: activeDayKeys.size,
     perfectDays,
     metric: () => 0,
@@ -526,6 +630,11 @@ export function deriveWorld(save: SaveState, now: Date = new Date()): World {
     days_since_start: daysBetween(firstDay, today) + 1,
     challenges_done: save.challenges.filter((c) => c.resolved === 'complete').length,
     titles: Object.keys(save.unlocked.titles).length,
+    hobbies_kept: hobbies.length,
+    shelf_finished: sum(hobbies.map((h) => h.finished.length)),
+    shelf_size: sum(hobbies.map((h) => h.def.shelf.length)),
+    journal_entries: save.journal.length,
+    journal_days: new Set(save.journal.map((j) => j.date)).size,
     attribute_levels: sum(ATTRIBUTE_IDS.map((id) => attributes[id].level.level)),
     max_attribute: Math.max(...ATTRIBUTE_IDS.map((id) => attributes[id].level.level)),
     min_attribute: Math.min(...ATTRIBUTE_IDS.map((id) => attributes[id].level.level)),

@@ -610,6 +610,104 @@ const defs: ActionDef[] = [
     quickAmount: 1,
     restores: 3,
   },
+
+  /* --------------------------------------------------------------- hobbies
+   *
+   * These exist because "creative work" is not a thing anyone actually does.
+   * People bake, or crochet, or paint — and each one asks something different
+   * of you, so each one is worth something different. Crochet and painting
+   * both cost creativity, but only one of them calms you down.
+   */
+  {
+    id: 'bake',
+    name: 'Baking',
+    emoji: '🧁',
+    category: 'craft',
+    blurb: 'A recipe is a promise you make to someone, usually including yourself.',
+    unit: 'minutes',
+    // Precision work that ends in something to give away — it pays across
+    // creativity, care and the discipline of actually following the method.
+    xpPerUnit: 0.64,
+    attributes: { creativity: 0.42, relationships: 0.2, discipline: 0.18, organization: 0.1 },
+    vitals: { spirit: 0.22, energy: -0.04 },
+    keyVital: 'energy',
+    softCap: 120,
+    masteryStep: 400,
+    tags: ['making', 'home', 'calm'],
+    quickAmount: 45,
+  },
+  {
+    id: 'crochet',
+    name: 'Crochet',
+    emoji: '🧶',
+    category: 'craft',
+    blurb: 'Rows that add up while your mind goes quiet.',
+    unit: 'minutes',
+    // The rare making that restores instead of spending. Almost nothing else
+    // in the catalogue gives clarity back while you do it.
+    xpPerUnit: 0.55,
+    attributes: { creativity: 0.4, focus: 0.22, discipline: 0.16 },
+    vitals: { spirit: 0.2, clarity: 0.1 },
+    keyVital: 'spirit',
+    softCap: 150,
+    masteryStep: 500,
+    tags: ['making', 'calm', 'handwork'],
+    quickAmount: 30,
+    restores: 0.02,
+  },
+  {
+    id: 'paint',
+    name: 'Painting',
+    emoji: '🖌️',
+    category: 'craft',
+    blurb: 'The one that is allowed to go badly.',
+    unit: 'minutes',
+    xpPerUnit: 0.66,
+    attributes: { creativity: 0.72, focus: 0.18 },
+    vitals: { spirit: 0.26, clarity: -0.05 },
+    keyVital: 'spirit',
+    softCap: 120,
+    masteryStep: 450,
+    tags: ['making', 'deep', 'expressive'],
+    quickAmount: 40,
+  },
+  {
+    id: 'sudoku',
+    name: 'Sudoku',
+    emoji: '🔢',
+    category: 'mind',
+    blurb: 'A small closed world with exactly one right answer in it.',
+    unit: 'minutes',
+    // Pure focus training. Short soft cap on purpose: this is a sharpener,
+    // and an hour of it is not three times better than twenty minutes.
+    xpPerUnit: 0.5,
+    attributes: { focus: 0.55, discipline: 0.18, knowledge: 0.1 },
+    vitals: { clarity: 0.04 },
+    keyVital: 'clarity',
+    softCap: 45,
+    masteryStep: 250,
+    tags: ['puzzle', 'calm', 'sharp'],
+    quickAmount: 20,
+  },
+  {
+    id: 'game',
+    name: 'Playing a game',
+    emoji: '🎮',
+    category: 'craft',
+    blurb: 'Rest that you are awake for. It counts — it was never wasted time.',
+    unit: 'minutes',
+    // Deliberately a real action with real value. An app that scores your life
+    // and quietly rates your rest at zero is lying about how people work.
+    xpPerUnit: 0.34,
+    attributes: { creativity: 0.2, focus: 0.16, relationships: 0.06 },
+    vitals: { spirit: 0.18, energy: 0.04 },
+    keyVital: 'spirit',
+    softCap: 120,
+    masteryStep: 600,
+    tags: ['play', 'rest'],
+    quickAmount: 45,
+    restores: 0.01,
+  },
 ];
 
 export const ACTIONS: Record<string, ActionDef> = Object.fromEntries(defs.map((a) => [a.id, a]));

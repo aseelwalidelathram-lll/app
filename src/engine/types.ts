@@ -90,6 +90,14 @@ export interface LogEntry {
   at: number;
   amount: number;
   note?: string;
+  /** Optional: the hobby this hour belonged to. */
+  hobbyId?: string;
+  /**
+   * Optional: the specific thing on that hobby's shelf. Shelf progress is the
+   * sum of these, so a book's page count is derived from the log like
+   * everything else rather than being a counter someone has to keep correct.
+   */
+  itemId?: string;
   /** XP actually awarded, frozen at log time so history never rewrites itself. */
   xp: number;
   attributeXp: Partial<Record<AttributeId, number>>;
@@ -247,9 +255,71 @@ export interface SeasonDef {
   blurb: string;
 }
 
+/* -------------------------------------------------------------- hobbies */
+
+/**
+ * One thing on a hobby's shelf: a book to read, a game in the backlog, a
+ * recipe to try, a piece to paint. Shelves are the personal half of the app —
+ * nothing here is content anyone else wrote.
+ */
+export interface ShelfItem {
+  id: string;
+  title: string;
+  /** Author, studio, whoever made it. Optional — plenty of things have no one. */
+  by?: string;
+  note?: string;
+  /** How big it is, when it has a size: 244 pages, 12 episodes, 40 rows. */
+  total?: number;
+  /** What `total` counts, in this hobby's own words. */
+  totalUnit?: string;
+  addedAt: number;
+  addedOn: string;
+  /** Set when it is done. Finished things stay on the shelf as a record. */
+  finishedOn?: string;
+  /** Key into the image store — never the image itself, which lives in IndexedDB. */
+  imageId?: string;
+}
+
+export interface Hobby {
+  id: string;
+  name: string;
+  emoji: string;
+  color: string;
+  /** What this shelf holds, in this hobby's language: "books", "games". */
+  shelfNoun: string;
+  /** What one entry on the shelf is called: "book", "game". */
+  shelfNounSingular: string;
+  /** What this hobby counts a thing's size in: "pages", "rows", "hours". */
+  defaultItemUnit?: string;
+  /** Actions whose logged time counts as time spent here. */
+  actionIds: string[];
+  blurb?: string;
+  imageId?: string;
+  createdAt: number;
+  shelf: ShelfItem[];
+  archived?: boolean;
+}
+
+/** A dated note about a hobby, optionally about one thing on its shelf. */
+export interface JournalEntry {
+  id: string;
+  hobbyId: string;
+  itemId?: string;
+  date: string;
+  at: number;
+  text: string;
+}
+
 /* --------------------------------------------------------------- ledger */
 
-export type LedgerSource = 'quest' | 'achievement' | 'mission' | 'challenge' | 'title' | 'card';
+export type LedgerSource =
+  | 'quest'
+  | 'achievement'
+  | 'mission'
+  | 'challenge'
+  | 'title'
+  | 'card'
+  | 'pick';
 
 /**
  * Rewards that did not come from an action directly. Keeping them as an
@@ -302,6 +372,16 @@ export interface SaveState {
     titles: Record<string, string>;
     cosmetics: string[];
   };
+  /** The player's own hobbies. Entirely user-made — no defaults ship here. */
+  hobbies: Hobby[];
+  journal: JournalEntry[];
+  /**
+   * `hobbyId:weekKey` -> itemId, when the player chose this week's pick by hand
+   * instead of taking the one offered.
+   */
+  pickOverrides: Record<string, string>;
+  /** `hobbyId:itemId` -> date the finishing reward was paid. Paid once, ever. */
+  claimedPicks: Record<string, string>;
   /** Mission stage index already collected. */
   missionStages: Record<string, number>;
   challenges: ChallengeRun[];

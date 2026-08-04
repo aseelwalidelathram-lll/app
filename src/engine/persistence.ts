@@ -4,7 +4,11 @@ import type { SaveState } from './types';
 const KEY = 'lumen.save.v1';
 
 /** Migrations run in order; each takes the previous shape to the next one. */
-const MIGRATIONS: ((s: SaveState) => SaveState)[] = [];
+const MIGRATIONS: ((s: SaveState) => SaveState)[] = [
+  // v1 -> v2: hobbies, shelves and journals arrive. Nothing existing changes
+  // meaning, so an old save simply starts with none of them.
+  (s) => ({ ...s, hobbies: [], journal: [], pickOverrides: {}, claimedPicks: {} }),
+];
 
 function migrate(raw: SaveState): SaveState {
   let save = raw;
@@ -28,6 +32,10 @@ function migrate(raw: SaveState): SaveState {
     ledger: Array.isArray(save.ledger) ? save.ledger : [],
     challenges: Array.isArray(save.challenges) ? save.challenges : [],
     rituals: Array.isArray(save.rituals) ? save.rituals : base.rituals,
+    hobbies: Array.isArray(save.hobbies) ? save.hobbies : [],
+    journal: Array.isArray(save.journal) ? save.journal : [],
+    pickOverrides: save.pickOverrides ?? {},
+    claimedPicks: save.claimedPicks ?? {},
   };
 }
 

@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { defineConfig, type Plugin } from 'vite'
@@ -50,8 +51,24 @@ function serviceWorker(): Plugin {
   }
 }
 
+/*
+ * A build stamp the app can show. Without one, "is this the latest version?"
+ * can only be answered by squinting at the UI and guessing.
+ */
+const commit = (() => {
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    return 'local'
+  }
+})()
+
 // https://vite.dev/config/
 export default defineConfig({
   base,
+  define: {
+    __BUILD_COMMIT__: JSON.stringify(commit),
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
   plugins: [react(), serviceWorker()],
 })

@@ -27,9 +27,16 @@ self.addEventListener('install', (event) => {
     caches
       .open(CACHE)
       // Individually, so one 404 can't sink the whole install.
-      .then((cache) => Promise.all(PRECACHE.map((url) => cache.add(url).catch(() => undefined))))
-      .then(() => self.skipWaiting()),
+      .then((cache) => Promise.all(PRECACHE.map((url) => cache.add(url).catch(() => undefined)))),
   );
+  // Deliberately no skipWaiting here. A new worker that seizes control mid-visit
+  // leaves the open page running the previous build's JavaScript against the new
+  // build's files. Instead it waits, the app notices and offers a reload, and
+  // the swap happens at a moment the reader chose.
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {

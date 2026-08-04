@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { COSMETICS_BY_ID, isEvening, seasonFor } from './engine';
 import { LogSheet } from './components/LogSheet';
 import { Toasts } from './components/Toasts';
+import { applyUpdate, onUpdateReady } from './pwa';
 import { useStore } from './state/context';
 import { Almanac } from './views/Almanac';
 import { Atlas } from './views/Atlas';
@@ -24,6 +25,27 @@ const NAV: { id: ViewId; label: string; glyph: string }[] = [
   { id: 'atlas', label: 'Atlas', glyph: '🗺️' },
   { id: 'workshop', label: 'Workshop', glyph: '✦' },
 ];
+
+/**
+ * A new build cannot take over a page that is already running — the open tab
+ * keeps the JavaScript it started with. So the app says so, and the swap
+ * happens when the reader agrees to it rather than silently on some later
+ * visit they cannot predict.
+ */
+function UpdateBanner() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => onUpdateReady(setReady), []);
+
+  if (!ready) return null;
+  return (
+    <div className="update-banner">
+      <span>A newer version of Lumen is ready.</span>
+      <button className="btn sm primary" onClick={applyUpdate}>
+        Reload
+      </button>
+    </div>
+  );
+}
 
 export default function App() {
   const { save, world } = useStore();
@@ -130,6 +152,8 @@ export default function App() {
         {view === 'atlas' && <Atlas />}
         {view === 'workshop' && <Workshop />}
       </main>
+
+      <UpdateBanner />
 
       <button className="fab" onClick={() => openLog()} title="Log an action (L)">
         ＋ Log

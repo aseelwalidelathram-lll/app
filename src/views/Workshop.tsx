@@ -251,6 +251,10 @@ export function Workshop() {
         <div className="tiny faint" style={{ marginTop: 12 }}>
           {save.log.length} actions logged · {save.ledger.length} rewards recorded · save format v{save.version}
         </div>
+        <div className="tiny faint" style={{ marginTop: 4 }}>
+          {/* So "am I running the latest version?" has an answer you can read out. */}
+          build {__BUILD_COMMIT__} · {new Date(__BUILD_TIME__).toLocaleString()}
+        </div>
       </Card>
     </div>
   );

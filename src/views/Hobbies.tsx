@@ -8,6 +8,7 @@ import {
   PICK_REWARD,
   createHobby,
   fmtDuration,
+  hashString,
   prettyDate,
   plural,
 } from '../engine';
@@ -47,7 +48,7 @@ function HobbyList({ onOpen }: { onOpen: (id: string) => void }) {
         <StarterPalette />
       ) : (
         <>
-          <div className="grid hobby-grid">
+          <div className="masonry">
             {world.hobbies.map((h) => (
               <HobbyCard key={h.def.id} hobby={h} onOpen={() => onOpen(h.def.id)} />
             ))}
@@ -65,50 +66,71 @@ function HobbyList({ onOpen }: { onOpen: (id: string) => void }) {
   );
 }
 
+/**
+ * A pinboard tile. Heights vary on purpose — a grid of identical rectangles
+ * reads as a database table, and this is meant to read as a shelf you walk
+ * past. Without a photo the tile still varies, seeded off the hobby's own id
+ * so it is stable rather than jittering on every render.
+ */
 function HobbyCard({ hobby, onOpen }: { hobby: HobbyState; onOpen: () => void }) {
   const { def, pick, minutes, streak, active, finished } = hobby;
+  const aspect = COVER_ASPECTS[hashString(def.id) % COVER_ASPECTS.length];
 
   return (
-    <button className="hobby-card" onClick={onOpen} style={{ borderColor: `color-mix(in oklab, ${def.color} 34%, transparent)` }}>
-      <div className="hobby-cover" style={{ background: `linear-gradient(150deg, ${def.color}22, transparent)` }}>
+    <button className="hobby-tile" onClick={onOpen}>
+      {/*
+        The shape goes through a custom property rather than `aspect-ratio`
+        directly: an inline aspect-ratio would outrank every media query, and
+        a short landscape screen needs much flatter covers than a tall one.
+      */}
+      <div
+        className="hobby-tile-cover"
+        style={
+          {
+            '--cover-aspect': def.imageId ? 'auto' : aspect,
+            background: `linear-gradient(155deg, color-mix(in oklab, ${def.color} 26%, transparent), transparent 78%)`,
+          } as React.CSSProperties
+        }
+      >
         {def.imageId ? (
           <Picture imageId={def.imageId} className="pic-fill" />
         ) : (
-          <span style={{ fontSize: 40 }}>{def.emoji}</span>
+          <span className="hobby-tile-glyph">{def.emoji}</span>
         )}
+        {streak > 0 && <span className="hobby-tile-streak">🔥 {streak}</span>}
       </div>
 
-      <div className="hobby-body">
-        <div className="row" style={{ gap: 8 }}>
-          <span style={{ fontSize: 17 }}>{def.emoji}</span>
-          <span className="strong" style={{ fontSize: 15.5 }}>{def.name}</span>
-          <span className="spacer" />
-          {streak > 0 && <span className="tiny" style={{ color: 'var(--warm)' }}>🔥{streak}</span>}
-        </div>
+      <div className="hobby-tile-body">
+        <div className="hobby-tile-name">{def.name}</div>
 
         {pick ? (
-          <div className="hobby-pick-mini">
-            <div className="tiny faint">This week</div>
-            <div className="small strong ellipsis">{pick.item.title}</div>
-            {pick.target > 0 && <Meter ratio={pick.ratio} color={def.color} className="thin" />}
-          </div>
+          <>
+            <div className="hobby-tile-pick ellipsis">{pick.item.title}</div>
+            {pick.target > 0 && (
+              <Meter ratio={pick.ratio} color={def.color} className="thin" style={{ marginTop: 7 }} />
+            )}
+          </>
         ) : (
-          <div className="tiny faint" style={{ marginTop: 8 }}>
-            {def.shelf.length ? 'Shelf all finished — add something new.' : `No ${def.shelfNoun} yet.`}
+          <div className="hobby-tile-pick faint">
+            {def.shelf.length ? 'shelf all finished' : `no ${def.shelfNoun} yet`}
           </div>
         )}
 
-        <div className="row tiny faint" style={{ marginTop: 10 }}>
+        <div className="hobby-tile-meta">
           <span>{minutes > 0 ? fmtDuration(minutes) : 'not started'}</span>
-          <span className="spacer" />
+          <span>·</span>
           <span>
-            {active.length} on the shelf{finished.length > 0 && ` · ${finished.length} done`}
+            {active.length} on the shelf
+            {finished.length > 0 && ` · ${finished.length} done`}
           </span>
         </div>
       </div>
     </button>
   );
 }
+
+/** Tile shapes, in the proportions a pinboard tends to fall into. */
+const COVER_ASPECTS = ['1 / 1', '4 / 5', '3 / 4', '1 / 1', '5 / 4', '4 / 5'];
 
 /** Shown once, when there are no hobbies yet. */
 function StarterPalette() {

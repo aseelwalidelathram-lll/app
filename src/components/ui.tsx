@@ -82,13 +82,15 @@ export function Meter({
   ratio,
   color = 'var(--accent)',
   className = '',
+  style,
 }: {
   ratio: number;
   color?: string;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   return (
-    <div className={`meter ${className}`}>
+    <div className={`meter ${className}`} style={style}>
       <i style={{ width: `${Math.max(0, Math.min(1, ratio)) * 100}%`, background: color }} />
     </div>
   );

@@ -724,7 +724,7 @@ input, select, textarea {
 
 .tabbar { display: none; }
 
-@media (max-width: 900px) {
+@media (max-width: 900px), (max-height: 560px) {
   .rail { display: none; }
   /* Installed to a home screen the app runs fullscreen, so the notch and the
      gesture bar are ours to avoid — nothing else is going to inset for us. */
@@ -816,43 +816,6 @@ body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::aft
   outline-offset: 2px;
 }
 
-/* The card that opens into a hobby. */
-.hobby-card {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  padding: 0;
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  color: inherit;
-  cursor: pointer;
-  transition: transform 0.22s var(--ease), border-color 0.22s var(--ease);
-}
-.hobby-card:hover { transform: translateY(-3px); }
-.reduced-motion .hobby-card { transition: none; }
-.reduced-motion .hobby-card:hover { transform: none; }
-
-.hobby-cover {
-  height: 104px;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  border-bottom: 1px solid var(--line-soft);
-}
-.hobby-body { padding: 13px 15px 15px; }
-.hobby-pick-mini {
-  margin-top: 10px;
-  padding: 9px 11px;
-  border-radius: var(--r-sm);
-  background: var(--surface);
-  border: 1px solid var(--line-soft);
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
 .hobby-banner {
   height: 158px;
   margin: -18px -18px 16px;
@@ -937,14 +900,147 @@ body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::aft
   border: 1px solid var(--line-soft);
 }
 
-/* Hobbies stay at least two-up even on a phone — a stack of seven full-width
-   cards is a scroll, not a list you can see. */
-.hobby-grid { grid-template-columns: repeat(auto-fill, minmax(212px, 1fr)); }
 
-@media (max-width: 900px) {
-  .hobby-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .hobby-cover { height: 76px; }
-  .hobby-body { padding: 11px 12px 13px; }
+/* ----------------------------------------------------------- pinboard */
+
+/*
+ * A real masonry, via columns rather than grid. Grid can only fake this with
+ * fixed row spans, which means guessing every tile's height in advance —
+ * columns let each tile be exactly as tall as its contents and flow.
+ *
+ * The cost is that column flow is top-to-bottom-then-across rather than
+ * reading order. For a board you browse rather than read, that is the right
+ * trade.
+ */
+.masonry {
+  columns: 232px 4;
+  column-gap: 18px;
+}
+
+.masonry > * {
+  break-inside: avoid;
+  /* Safari still needs the old spelling to not slice tiles in half. */
+  -webkit-column-break-inside: avoid;
+  width: 100%;
+  margin: 0 0 18px;
+}
+
+.hobby-tile {
+  display: block;
+  text-align: left;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.24s var(--ease), box-shadow 0.24s var(--ease), border-color 0.24s var(--ease);
+}
+
+.hobby-tile:hover {
+  transform: translateY(-3px);
+  border-color: var(--line);
+  box-shadow: 0 20px 44px -26px rgba(0, 0, 0, 0.9);
+}
+
+.reduced-motion .hobby-tile { transition: none; }
+.reduced-motion .hobby-tile:hover { transform: none; }
+
+.hobby-tile-cover {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  aspect-ratio: var(--cover-aspect, 1);
+}
+
+.hobby-tile-glyph {
+  font-size: 44px;
+  opacity: 0.92;
+}
+
+.hobby-tile-streak {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: rgba(8, 12, 22, 0.62);
+  backdrop-filter: blur(8px);
+  color: var(--warm);
+}
+
+/* Notion's restraint: quiet labels, generous line spacing, no shouting. */
+.hobby-tile-body { padding: 13px 14px 15px; }
+
+.hobby-tile-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
+.hobby-tile-pick {
+  font-size: 12.5px;
+  color: var(--dim);
+  margin-top: 5px;
+}
+
+.hobby-tile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 11px;
+  font-size: 11px;
+  color: var(--faint);
+}
+
+@media (max-width: 900px), (max-height: 560px) {
+  .masonry { columns: 158px 2; column-gap: 12px; }
+  .masonry > * { margin-bottom: 12px; }
+  .hobby-tile-body { padding: 11px 12px 13px; }
+  .hobby-tile-glyph { font-size: 34px; }
   .hobby-banner { height: 120px; margin: -18px -18px 14px; }
   .pick-cover { width: 86px; }
+}
+
+/*
+ * Landscape on a phone is short, not small. The rail is still hidden, but
+ * there is real width to spend, so the board widens instead of stretching
+ * two enormous columns across the screen.
+ */
+/*
+ * Landscape on a phone is short, not small: there is plenty of width and
+ * almost no height. So the board widens, and everything that costs vertical
+ * space gets trimmed rather than scaled down.
+ */
+@media (max-height: 560px) and (orientation: landscape) {
+  .masonry { columns: 176px 5; column-gap: 14px; }
+  .masonry > * { margin-bottom: 14px; }
+
+  .main {
+    padding:
+      calc(14px + env(safe-area-inset-top)) calc(18px + env(safe-area-inset-right))
+      calc(74px + env(safe-area-inset-bottom)) calc(18px + env(safe-area-inset-left));
+  }
+
+  .page-head { margin-bottom: 14px; }
+  .page-head .sub { display: none; }
+  .hobby-banner { height: 92px; }
+  .hobby-tile-glyph { font-size: 26px; }
+  /* Flatter covers: height is the scarce resource here, not width. */
+  .hobby-tile-cover { aspect-ratio: 16 / 7; }
+  .hobby-tile-body { padding: 9px 11px 11px; }
+  .hobby-tile-name { font-size: 13.5px; }
+
+  /* One row of labels is worth more than the pixels it costs — but only just. */
+  .tabbar { padding: 4px 6px calc(4px + env(safe-area-inset-bottom)); }
+  .tabbar button { padding: 3px 2px; font-size: 9.5px; gap: 1px; }
+  .tabbar button .glyph { font-size: 15px; }
+
+  .fab { bottom: calc(58px + env(safe-area-inset-bottom)); height: 42px; }
+
+  /* Sheets are full-height dialogs; on a short screen they must not overflow. */
+  .sheet { max-height: 92vh; }
 }

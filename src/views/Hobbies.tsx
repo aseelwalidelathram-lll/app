@@ -73,7 +73,7 @@ function HobbyList({ onOpen }: { onOpen: (id: string) => void }) {
  * so it is stable rather than jittering on every render.
  */
 function HobbyCard({ hobby, onOpen }: { hobby: HobbyState; onOpen: () => void }) {
-  const { def, pick, minutes, streak, active, finished } = hobby;
+  const { def, cover, pick, minutes, streak, active, finished } = hobby;
   const aspect = COVER_ASPECTS[hashString(def.id) % COVER_ASPECTS.length];
 
   return (
@@ -87,16 +87,18 @@ function HobbyCard({ hobby, onOpen }: { hobby: HobbyState; onOpen: () => void })
         className="hobby-tile-cover"
         style={
           {
-            '--cover-aspect': hasCover(def) ? 'auto' : aspect,
+            '--cover-aspect': hasCover(def) || cover ? 'auto' : aspect,
             background: `linear-gradient(155deg, color-mix(in oklab, ${def.color} 26%, transparent), transparent 78%)`,
           } as React.CSSProperties
         }
       >
-        {hasCover(def) ? (
-          <Picture imageId={def.imageId} src={def.coverUrl} className="pic-fill" />
-        ) : (
-          <span className="hobby-tile-glyph">{def.emoji}</span>
-        )}
+        {/*
+          The emoji is always rendered, with the picture stacked over it in the
+          same grid cell. So a cover that has not been added yet — or one that
+          fails to load — leaves the emoji showing rather than a blank tile.
+        */}
+        <span className="hobby-tile-glyph">{def.emoji}</span>
+        <Picture imageId={def.imageId} src={cover} className="pic-fill stacked" />
         {streak > 0 && <span className="hobby-tile-streak">🔥 {streak}</span>}
       </div>
 
@@ -194,7 +196,7 @@ function HobbySpace({
   onBack: () => void;
   onLog: (actionId?: string) => void;
 }) {
-  const { def, pick, minutes, days, streak, weekMinutes, active, finished, journal, progress } = hobby;
+  const { def, cover, pick, minutes, days, streak, weekMinutes, active, finished, journal, progress } = hobby;
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
   const [choosing, setChoosing] = useState(false);
@@ -213,9 +215,9 @@ function HobbySpace({
 
       {/* --------------------------------------------------------- header */}
       <Card style={{ overflow: 'hidden' }}>
-        {hasCover(def) && (
+        {(hasCover(def) || cover) && (
           <div className="hobby-banner">
-            <Picture imageId={def.imageId} src={def.coverUrl} className="pic-fill" />
+            <Picture imageId={def.imageId} src={cover} className="pic-fill" />
           </div>
         )}
         <div className="row" style={{ gap: 14, flexWrap: 'wrap' }}>

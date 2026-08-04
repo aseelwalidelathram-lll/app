@@ -956,9 +956,25 @@ body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::aft
 }
 
 .hobby-tile-glyph {
+  grid-area: 1 / 1;
   font-size: 44px;
   opacity: 0.92;
 }
+
+/* Stacked over the emoji in the same cell, so a missing cover falls back. */
+.pic-fill.stacked {
+  grid-area: 1 / 1;
+  align-self: stretch;
+  justify-self: stretch;
+}
+
+/*
+ * Once a cover has actually loaded, the emoji underneath is not just hidden by
+ * paint order — it is removed. <Picture> renders nothing at all when an image
+ * is missing or fails, so `:has(img)` is a reliable "the cover is really
+ * there" test, and the emoji comes back on its own if it ever is not.
+ */
+.hobby-tile-cover:has(img) .hobby-tile-glyph { display: none; }
 
 .hobby-tile-streak {
   position: absolute;

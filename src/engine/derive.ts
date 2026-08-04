@@ -10,6 +10,7 @@
 
 import { ACTIONS, ACTION_LIST, DEFAULT_RITUALS } from './content/actions';
 import { ATTRIBUTES, ATTRIBUTE_IDS, CATEGORIES } from './content/attributes';
+import { blueprintCover } from './content/hobbies';
 import { attributeLevel, characterLevel, masteryFor, nextRank, rankFor, type LevelInfo, type MasteryInfo, type Rank } from './progression';
 import { itemComplete, pickForWeek, shelfProgress, type Pick } from './hobbies';
 import { evaluateRequirement, periodKeyFor, windowFor, type EvalContext } from './quests';
@@ -146,6 +147,11 @@ export interface World {
 /** One hobby, with its shelf, its journal and its own hours accounted for. */
 export interface HobbyState {
   def: Hobby;
+  /**
+   * The cover to draw: the pursuit's own, else the one shipped for its name.
+   * Undefined means fall back to the emoji.
+   */
+  cover: string | undefined;
   entries: LogEntry[];
   /** Minutes, for the actions that are measured in them. */
   minutes: number;
@@ -212,6 +218,7 @@ function deriveHobby(save: SaveState, def: Hobby, today: string): HobbyState {
 
   return {
     def,
+    cover: def.coverUrl ?? blueprintCover(def.name),
     entries,
     minutes,
     entryCount: entries.length,

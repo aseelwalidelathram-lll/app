@@ -14,6 +14,15 @@ import type { Hobby } from '../types';
 
 export type HobbyBlueprint = Omit<Hobby, 'id' | 'createdAt' | 'shelf'>;
 
+/**
+ * Covers live in `public/covers/`. Built through BASE_URL rather than as a
+ * bare "/covers/…" so the path survives being served from a subdirectory.
+ *
+ * A missing file is not a bug worth guarding against — `<Picture>` falls back
+ * to the emoji, so a cover can be added to the repo later and simply appear.
+ */
+const cover = (file: string) => `${import.meta.env.BASE_URL}covers/${file}`;
+
 export const HOBBY_BLUEPRINTS: HobbyBlueprint[] = [
   {
     name: 'Reading',
@@ -84,8 +93,21 @@ export const HOBBY_BLUEPRINTS: HobbyBlueprint[] = [
     shelfNounSingular: 'game',
     defaultItemUnit: 'hours',
     actionIds: ['game'],
+    coverUrl: cover('games.jpg'),
   },
 ];
+
+/**
+ * The cover that ships for a pursuit of this name, if there is one.
+ *
+ * Matched on name rather than stored on the hobby, so a cover added to the
+ * repo later reaches pursuits that already exist — nobody should have to
+ * delete and recreate a pursuit to get its artwork.
+ */
+export function blueprintCover(name: string): string | undefined {
+  const key = name.trim().toLowerCase();
+  return HOBBY_BLUEPRINTS.find((b) => b.name.toLowerCase() === key)?.coverUrl;
+}
 
 /** Offered when someone builds a hobby from scratch. */
 export const HOBBY_EMOJI = [

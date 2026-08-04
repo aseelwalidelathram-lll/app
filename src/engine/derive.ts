@@ -151,7 +151,7 @@ export interface HobbyState {
    * The cover to draw: the pursuit's own, else the one shipped for its name.
    * Undefined means fall back to the emoji.
    */
-  cover: string | undefined;
+  cover: string | string[] | undefined;
   entries: LogEntry[];
   /** Minutes, for the actions that are measured in them. */
   minutes: number;

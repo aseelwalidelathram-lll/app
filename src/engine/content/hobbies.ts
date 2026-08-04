@@ -15,13 +15,31 @@ import type { Hobby } from '../types';
 export type HobbyBlueprint = Omit<Hobby, 'id' | 'createdAt' | 'shelf'>;
 
 /**
- * Covers live in `public/covers/`. Built through BASE_URL rather than as a
- * bare "/covers/…" so the path survives being served from a subdirectory.
+ * Covers live in `public/covers/`, named after the pursuit.
  *
- * A missing file is not a bug worth guarding against — `<Picture>` falls back
- * to the emoji, so a cover can be added to the repo later and simply appear.
+ * Every plausible extension is offered and `<Picture>` tries them in order,
+ * so a cover can be dropped in as a .jpg, .png or .webp without anyone having
+ * to match the filename in this file to the file they actually have.
+ *
+ * Paths go through BASE_URL rather than a bare "/covers/…" so they survive
+ * being served from a subdirectory. A cover that is not there yet is not a
+ * bug: the tile keeps its emoji until the file lands, then switches on its own.
  */
-const cover = (file: string) => `${import.meta.env.BASE_URL}covers/${file}`;
+const EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+
+const covers = (name: string) =>
+  EXTENSIONS.map((ext) => `${import.meta.env.BASE_URL}covers/${name}.${ext}`);
+
+/** Keyed by lowercased pursuit name, so a renamed pursuit keeps its artwork. */
+export const BLUEPRINT_COVERS: Record<string, string[]> = {
+  reading: covers('reading'),
+  baking: covers('baking'),
+  crochet: covers('crochet'),
+  sudoku: covers('sudoku'),
+  maths: covers('maths'),
+  painting: covers('painting'),
+  games: covers('games'),
+};
 
 export const HOBBY_BLUEPRINTS: HobbyBlueprint[] = [
   {
@@ -93,20 +111,18 @@ export const HOBBY_BLUEPRINTS: HobbyBlueprint[] = [
     shelfNounSingular: 'game',
     defaultItemUnit: 'hours',
     actionIds: ['game'],
-    coverUrl: cover('games.jpg'),
   },
 ];
 
 /**
- * The cover that ships for a pursuit of this name, if there is one.
+ * The covers that ship for a pursuit of this name, if any.
  *
- * Matched on name rather than stored on the hobby, so a cover added to the
+ * Matched on name rather than stored on the hobby, so artwork added to the
  * repo later reaches pursuits that already exist — nobody should have to
- * delete and recreate a pursuit to get its artwork.
+ * delete and recreate a pursuit to get its cover.
  */
-export function blueprintCover(name: string): string | undefined {
-  const key = name.trim().toLowerCase();
-  return HOBBY_BLUEPRINTS.find((b) => b.name.toLowerCase() === key)?.coverUrl;
+export function blueprintCover(name: string): string[] | undefined {
+  return BLUEPRINT_COVERS[name.trim().toLowerCase()];
 }
 
 /** Offered when someone builds a hobby from scratch. */

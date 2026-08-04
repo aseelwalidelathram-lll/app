@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { deleteImage, imageUrl, putImage } from '../engine/images';
 
 /**
@@ -17,18 +17,28 @@ export function Picture({
   style,
 }: {
   imageId?: string;
-  src?: string;
+  /**
+   * One URL, or several to try in order. The list exists so a cover can be
+   * dropped into the repo as a .jpg, .png or .webp without anyone having to
+   * match a filename in the code to the file they actually have.
+   */
+  src?: string | string[];
   alt?: string;
   className?: string;
   style?: React.CSSProperties;
 }) {
   const [url, setUrl] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  const candidates = useMemo(() => (src === undefined ? [] : Array.isArray(src) ? src : [src]), [src]);
+
+  useEffect(() => {
+    setAttempt(0);
+  }, [candidates]);
 
   useEffect(() => {
     let live = true;
-    setFailed(false);
-    if (src || !imageId) {
+    if (candidates.length || !imageId) {
       setUrl(null);
       return;
     }
@@ -36,10 +46,10 @@ export function Picture({
     return () => {
       live = false;
     };
-  }, [imageId, src]);
+  }, [imageId, candidates]);
 
-  const resolved = src ?? url;
-  if (!resolved || failed) return null;
+  const resolved = candidates.length ? candidates[attempt] : url;
+  if (!resolved) return null;
 
   return (
     <img
@@ -48,7 +58,9 @@ export function Picture({
       className={className}
       style={style}
       loading="lazy"
-      onError={() => setFailed(true)}
+      // Walk the list; running off the end renders nothing, which is what lets
+      // the emoji underneath show through.
+      onError={() => setAttempt((i) => i + 1)}
     />
   );
 }

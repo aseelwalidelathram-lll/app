@@ -1,23 +1,34 @@
 import { useEffect, useRef, useState } from 'react';
 import { deleteImage, imageUrl, putImage } from '../engine/images';
 
-/** Shows a stored image, or nothing at all while it loads or if it is gone. */
+/**
+ * Shows a picture from either source: one that ships with the app (`src`), or
+ * one stored on this device (`imageId`). A shipped cover wins, because it is
+ * the deliberate choice — an upload is what you reach for when there isn't one.
+ *
+ * Renders nothing while loading or if the image has gone missing, so a lost
+ * picture degrades to the emoji underneath rather than a broken-image icon.
+ */
 export function Picture({
   imageId,
+  src,
   alt = '',
   className,
   style,
 }: {
   imageId?: string;
+  src?: string;
   alt?: string;
   className?: string;
   style?: React.CSSProperties;
 }) {
   const [url, setUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let live = true;
-    if (!imageId) {
+    setFailed(false);
+    if (src || !imageId) {
       setUrl(null);
       return;
     }
@@ -25,10 +36,21 @@ export function Picture({
     return () => {
       live = false;
     };
-  }, [imageId]);
+  }, [imageId, src]);
 
-  if (!url) return null;
-  return <img src={url} alt={alt} className={className} style={style} loading="lazy" />;
+  const resolved = src ?? url;
+  if (!resolved || failed) return null;
+
+  return (
+    <img
+      src={resolved}
+      alt={alt}
+      className={className}
+      style={style}
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 /**

@@ -87,13 +87,13 @@ function HobbyCard({ hobby, onOpen }: { hobby: HobbyState; onOpen: () => void })
         className="hobby-tile-cover"
         style={
           {
-            '--cover-aspect': def.imageId ? 'auto' : aspect,
+            '--cover-aspect': hasCover(def) ? 'auto' : aspect,
             background: `linear-gradient(155deg, color-mix(in oklab, ${def.color} 26%, transparent), transparent 78%)`,
           } as React.CSSProperties
         }
       >
-        {def.imageId ? (
-          <Picture imageId={def.imageId} className="pic-fill" />
+        {hasCover(def) ? (
+          <Picture imageId={def.imageId} src={def.coverUrl} className="pic-fill" />
         ) : (
           <span className="hobby-tile-glyph">{def.emoji}</span>
         )}
@@ -127,6 +127,11 @@ function HobbyCard({ hobby, onOpen }: { hobby: HobbyState; onOpen: () => void })
       </div>
     </button>
   );
+}
+
+/** A cover from either source: shipped with the app, or added on this device. */
+function hasCover(x: { imageId?: string; coverUrl?: string }): boolean {
+  return !!(x.coverUrl || x.imageId);
 }
 
 /** Tile shapes, in the proportions a pinboard tends to fall into. */
@@ -208,9 +213,9 @@ function HobbySpace({
 
       {/* --------------------------------------------------------- header */}
       <Card style={{ overflow: 'hidden' }}>
-        {def.imageId && (
+        {hasCover(def) && (
           <div className="hobby-banner">
-            <Picture imageId={def.imageId} className="pic-fill" />
+            <Picture imageId={def.imageId} src={def.coverUrl} className="pic-fill" />
           </div>
         )}
         <div className="row" style={{ gap: 14, flexWrap: 'wrap' }}>
@@ -325,9 +330,9 @@ function PickPanel({ hobby }: { hobby: HobbyState }) {
 
   return (
     <div className="pick">
-      {item.imageId && (
+      {hasCover(item) && (
         <div className="pick-cover">
-          <Picture imageId={item.imageId} className="pic-fill" />
+          <Picture imageId={item.imageId} src={item.coverUrl} className="pic-fill" />
         </div>
       )}
       <div style={{ minWidth: 0, flex: 1 }}>
@@ -430,8 +435,8 @@ function ShelfRow({
   return (
     <>
       <div className="shelf-row" style={{ opacity: done ? 0.62 : 1 }}>
-        {item.imageId ? (
-          <Picture imageId={item.imageId} className="shelf-thumb" />
+        {hasCover(item) ? (
+          <Picture imageId={item.imageId} src={item.coverUrl} className="shelf-thumb" />
         ) : (
           <div className="shelf-thumb placeholder" style={{ background: `color-mix(in oklab, ${def.color} 14%, transparent)` }}>
             {def.emoji}

@@ -278,6 +278,12 @@ export interface ShelfItem {
   finishedOn?: string;
   /** Key into the image store — never the image itself, which lives in IndexedDB. */
   imageId?: string;
+  /**
+   * A cover that ships with the app rather than being uploaded on a device.
+   * Takes precedence over `imageId`, and unlike it, survives a fresh install
+   * and appears on every device.
+   */
+  coverUrl?: string;
 }
 
 export interface Hobby {
@@ -295,6 +301,8 @@ export interface Hobby {
   actionIds: string[];
   blurb?: string;
   imageId?: string;
+  /** A cover shipped with the app. See `ShelfItem.coverUrl`. */
+  coverUrl?: string;
   createdAt: number;
   shelf: ShelfItem[];
   archived?: boolean;
